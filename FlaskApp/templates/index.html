@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <title>Python Flask Test App</title>
+ 
+ 
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
+
+    <style>
+        font-family: 'Open Sans', sans-serif;
+        font-family: 'Indie Flower', cursive;
+        #content: {
+            position: relative;
+        }
+        p{
+            display: inline-block;
+            float: left;
+        }
+    </style>
+
+ 
+</head>
+ 
+<body>
+ 
+    <div class="container">
+        <div class="header">
+            {% if title %}
+                <h3 class="text-muted">This is a test page for {{title}}</h3>
+            {% else %}
+                <h3 class="text-muted">This is just a test page</h3>
+            {% endif %}
+        </div>
+        <div class="content">
+            {% for word in words %}
+                <p style='color: {{ word.color }};font-size: {{ word.size }}px;font-family: {{ word.font }};-webkit-transform: rotate({{ word.angle }}deg);'>{{ word.word }}</p>
+            {% endfor %}
+        </div>
+
+ 
+    </div>
+</body>
+ 
+</html>
