@@ -1,0 +1,17 @@
+Really simple stuff, but I proved that I can do the following:
+
+generate front-end words in cloud shape using data from the back-end
+render words in varying colors, sizes, fonts, positions and orientation
+This is a really good start. From here, all I need to do to make this into a working word cloud is:
+
+randomize every wordÅfs color, size, font, position and orientation
+figure out how to place words together without overlapping.
+The second part about figuring out where to place words is the hard part. This D3 JavaScript implementation uses a somewhat brute force method of just placing things in empty spaces, checking for collisions and moving it in a spiral fashion if there is a collision until there isnÅft. Though this is a bit inefficient, the author did note that compressing everything into simple sprites represented by a 32-bit integer pixel did speed up the algorithm by a lot. Other implementations such as the famous wordle generator apparently uses more complex but efficient methods like hierarchical bounding boxes and quad-trees to check for optimal placements. I have studied both HHBs and Quad-trees before, but IÅfm not sure if I want to implement them just yet.
+
+I think the best bet now that I have a basic understanding of Python is to study the word cloud generation code I found last time. Hopefully itÅfll provide me with more insider knowledge; at the very least I can just copy the code over and modify it until I see fit.
+
+Other than perfecting the word cloud generation algorithm, I also need to do the following to turn this into a real prototype:
+
+Separate the code for model, view and controller (right now everything is bundled up)
+Figure out model code that reads from a database (preferably MySQL) and makes a python ready dataset. Or, at the very least, fake some sort of easily adjustable dataset to be used in python just for the sake of testing.
+Tweak the word cloud generation code to make it generate a portrait typography-like thing instead. I might need to do some preliminary designs for this one though, so I guess this will have to come last after everything else definitely works.
