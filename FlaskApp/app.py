@@ -1,5 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, send_file, url_for
 from wordcloud import WordCloud
+import StringIO
 
 COLOR_RED = '#FF0000'
 COLOR_BLUE = '#0000FF'
@@ -11,6 +12,12 @@ app = Flask(__name__)
 
 @app.route("/")
 def main():
+    return render_template(
+        'index.html',
+        pic = url_for('generateWordCloud'))
+
+@app.route("/generate/")
+def generateWordCloud():
     words_old = [  #some words to visualize
         { 
             'word': 'this', 
@@ -52,13 +59,15 @@ def main():
     image = wordcloud.to_image()
     #words = wordcloud.process_text(text)
     #image.show()
-    image.save("img.jpg","JPEG")
 
-    #to do: figure out how to put img.jpg on localhost
+    return serveImg(image)
 
-    return render_template('index.html',
-        title = 'Word Cloud Test',
-        pic = 'img.jpg')
+def serveImg(img):
+    img_io = StringIO.StringIO()
+    img.save(img_io,"JPEG")
+    img_io.seek(0);\
+    return send_file(img_io,mimetype='image/jpeg')
+
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
