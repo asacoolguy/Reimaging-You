@@ -1,10 +1,10 @@
 from PIL import Image
-from pylab import *
+import numpy as np
 from skimage.filters import threshold_otsu
 from scipy.misc import toimage
 
 # read image to array
-image = array(Image.open('clinton_original.png').convert('L'))
+image = np.array(Image.open('clinton_original.png').convert('L'))
 thresh = threshold_otsu(image)
 binary = image > thresh
 

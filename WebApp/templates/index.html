@@ -35,14 +35,15 @@
     $(function() {
         $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
         $('a#generate').bind('click', function() {
-            $.getJSON($SCRIPT_ROOT + '/generate',
+            $.post($SCRIPT_ROOT + '/generate',
                 {
                     text: $('#textBox').val(),
                     image: $('#uploaded_portrait').attr('src')
                 },
                 function(data){
                     $('#generated_portrait').show().attr('src', data.image);
-                }
+                },
+                "json"
             );
             return false;
         });

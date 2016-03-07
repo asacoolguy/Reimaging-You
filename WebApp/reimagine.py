@@ -1,8 +1,7 @@
 #!/usr/local/bin/python
 
 # imports for basic flask web stuff
-from flask import Flask, render_template, send_file, url_for, request,  redirect
-from flask import send_from_directory, jsonify
+from flask import Flask, render_template, jsonify, request
 import StringIO
 from os import path
 import base64
@@ -12,18 +11,23 @@ from werkzeug import secure_filename
 from wordcloud import WordCloud
 from PIL import Image
 import numpy as np
-from pylab import *
 from skimage.filters import threshold_otsu
 from scipy.misc import toimage
 
 # setting up some parameters
-UPLOAD_FOLDER = './static/images/originals/'
-MASK_FOLDER = './static/images/masks/'
-OUTPUT_FOLDER = './static/images/outputs/'
+#APP_ROOT = path.dirname(path.abspath(__file__))
+#UPLOAD_FOLDER = path.join(APP_ROOT, 'static/images/originals/')
+#MASK_FOLDER = path.join(APP_ROOT, 'static/images/masks/')
+#OUTPUT_FOLDER = path.join(APP_ROOT, 'static/images/outputs/')
+UPLOAD_FOLDER_SERVE = 'static/images/originals/'
+UPLOAD_FOLDER = 'static/images/originals/'
+MASK_FOLDER = 'static/images/masks/'
+OUTPUT_FOLDER = 'static/images/outputs/'
 ALLOWED_EXTENSIONS = set(['png','jpg','jpeg'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER_SERVE'] = UPLOAD_FOLDER_SERVE
 app.config['MASK_FOLDER'] = MASK_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 d = path.dirname(__file__)
@@ -39,7 +43,7 @@ def main():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(path.join(app.config['UPLOAD_FOLDER'], filename))
-            uploaded_filename = path.join(app.config['UPLOAD_FOLDER'], filename)
+            uploaded_filename = path.join(app.config['UPLOAD_FOLDER_SERVE'], filename)
 
     if uploaded_filename != "":
         return render_template(
