@@ -24,20 +24,40 @@
     </style>
 
     <script type=text/javascript>
-        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+        $(function() {
+            
+        });
+
+        
     </script>
 
     <script type=text/javascript>
     $(function() {
-      $('a#generate').bind('click', function() {
-        $.getJSON($SCRIPT_ROOT + '/generate',
-            {text: $('#textBox').val()},
-            function(data){
-                $('#generated').attr('src', data.image);
-                $('#textBox').val(data.text);
+        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+        $('a#generate').bind('click', function() {
+            $.getJSON($SCRIPT_ROOT + '/generate',
+                {
+                    text: $('#textBox').val(),
+                    image: $('#uploaded_portrait').attr('src')
+                },
+                function(data){
+                    $('#generated_portrait').show().attr('src', data.image);
+                }
+            );
+            return false;
+        });
+
+        $('#generated_portrait').hide();
+        $('#loading').hide();
+        $(document)
+            .ajaxStart(function () {
+                $('#loading').show();
+                $('#generated_portrait').hide();
+            })
+            .ajaxStop(function () {
+                $('#loading').hide();
+                $('#generated_portrait').show();
             });
-        return false;
-      });
     });
   </script>
  
@@ -51,6 +71,11 @@
         </div>
         <div class="content">
             <textarea rows="15" cols="60" type="text" name="text" id="textBox">Enter your text here.</textarea>
+            {% if uploaded_portrait %}
+                <img id="uploaded_portrait" style="width:100%;max-width:300px;float:right"src="{{uploaded_portrait}}">
+            {% else %}
+                <img id="uploaded_portrait" style="width:100%;max-width:300px;float:right" src="./static/images/originals/silouette.png">
+            {% endif %}
             </br>
             <form action="" method=post enctype=multipart/form-data>
                 <p><input type=file name=file>
@@ -60,12 +85,9 @@
             <p><a href="javascript:void();" id="generate">generate your portrait</a>
             </form>
         </div>
-        <div class="image">
-            {% if filename %}
-                <img id="generated" style="width:100%;max-width:500px" src="{{filename}}">
-            {% else %}
-                <img id="generated" style="width:100%;max-width:500px" src="./static/images/originals/silouette.png">
-            {% endif %}
+        <div class="generated">
+            <img id="loading" src="./static/images/utility/loading_spinner.gif">
+            <img id="generated_portrait" style="width:100%;max-width:500px" src="./static/images/originals/silouette.png">
         </div>
     </div>
 </body>
