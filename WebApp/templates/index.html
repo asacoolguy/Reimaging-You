@@ -6,6 +6,7 @@
  
  
     <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
     <!-- fonts -->
     <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
@@ -19,10 +20,26 @@
         }
         p{
             display: inline-block;
-            float: left;
         }
     </style>
 
+    <script type=text/javascript>
+        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+
+    <script type=text/javascript>
+    $(function() {
+      $('a#generate').bind('click', function() {
+        $.getJSON($SCRIPT_ROOT + '/generate',
+            {text: $('#textBox').val()},
+            function(data){
+                $('#generated').attr('src', data.image);
+                $('#textBox').val(data.text);
+            });
+        return false;
+      });
+    });
+  </script>
  
 </head>
  
@@ -30,22 +47,26 @@
  
     <div class="container">
         <div class="header">
-            {% if title %}
-                <h3 class="text-muted">{{title}}</h3>
-            {% else %}
-                <h3 class="text-muted">This is just a test page</h3>
-            {% endif %}
+            <h2 class="text-muted">Typographic Portrait Prototype</h2>
         </div>
         <div class="content">
-            <!--
-            {% for word in words %}
-                <p style='color: {{ word.color }};font-size: {{ word.size }}px;font-family: {{ word.font }};-webkit-transform: rotate({{ word.angle }}deg);'>{{ word.word }}</p>
-            {% endfor %}
-            -->
-            <img src=".{{ pic }}">
+            <textarea rows="15" cols="60" type="text" name="text" id="textBox">Enter your text here.</textarea>
+            </br>
+            <form action="" method=post enctype=multipart/form-data>
+                <p><input type=file name=file>
+                <input type=submit value=Upload>
+            </form>
+            </br>
+            <p><a href="javascript:void();" id="generate">generate your portrait</a>
+            </form>
         </div>
-
- 
+        <div class="image">
+            {% if filename %}
+                <img id="generated" style="width:100%;max-width:500px" src="{{filename}}">
+            {% else %}
+                <img id="generated" style="width:100%;max-width:500px" src="./static/images/originals/silouette.png">
+            {% endif %}
+        </div>
     </div>
 </body>
  

@@ -1,14 +1,11 @@
-import numpy as np
-from os import path
-from PIL import Image
+#!/usr/bin/python
 
-d = path.dirname(__file__)
+print 'Content-type: text/html\n'
 
-alice_mask = np.array(Image.open(path.join(d,"alice_mask.png")))
-burrito_mask = np.array(Image.open(path.join(d,"burrito.png")))
+@app.route("/reimagine")
+def main():
+    return render_template(
+        'index.html',
+        title = 'yay word clouds!',
+        pic = url_for('generateWordCloud'))
 
-print alice_mask.shape
-print burrito_mask.shape
-
-print type(alice_mask)
-print type(burrito_mask)
