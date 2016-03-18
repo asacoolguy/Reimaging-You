@@ -64,7 +64,8 @@ class IntegralOccupancyMap(object):
 
 
 def random_color_func(word=None, font_size=None, position=None,
-                      orientation=None, font_path=None, random_state=None):
+                      orientation=None, font_path=None, random_state=None,
+                      width=None, height=None):
     """Random hue color generation.
 
     Default coloring method. This just picks a random hue with value 80% and
@@ -72,7 +73,7 @@ def random_color_func(word=None, font_size=None, position=None,
 
     Parameters
     ----------
-    word, font_size, position, orientation  : ignored.
+    word, font_size, position, orientation, width, height : ignored.
 
     random_state : random.Random object or None, (default=None)
         If a random object is given, this is used for generating random numbers.
@@ -82,6 +83,38 @@ def random_color_func(word=None, font_size=None, position=None,
         random_state = Random()
     return "hsl(%d, 80%%, 50%%)" % random_state.randint(0, 255)
 
+def gradient_color_func(word=None, font_size=None, position=None,
+                      orientation=None, font_path=None, random_state=None,
+                      width=None, height=None):
+    """location based hue color generation.
+
+    Custom coloring based on position of the word. 
+
+    Generates a hue with value 80% and lumination 50%.
+
+    Parameters
+    ----------
+    word, font_size, orientation : ignored.
+
+    position, width, height : used to calculate color
+
+    random_state : random.Random object or None, (default=None)
+        If a random object is given, this is used for generating random numbers.
+
+    """
+    # --- vertical ---
+    hue = position[0] * 260 / height
+    sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+    lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+
+    # --- horizontal ---
+    #hue = position[1] * 260 / width 
+
+    # --- diagonal ---
+    #hue = (position[0] + position[1]) * 260 / (width + height)
+    #sat = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 70 
+
+    return "hsl(%d, %d%%, 50%%)" % (hue, sat)
 
 def get_single_color_func(color):
     """Create a color function which returns a single hue and saturation with.
@@ -95,7 +128,8 @@ def get_single_color_func(color):
     h, s, v = colorsys.rgb_to_hsv(old_r / rgb_max, old_g / rgb_max, old_b / rgb_max)
 
     def single_color_func(word=None, font_size=None, position=None,
-                          orientation=None, font_path=None, random_state=None):
+                          orientation=None, font_path=None, random_state=None,
+                          width=None, height=None):
         """Random color generation.
 
         Additional coloring method. It picks a random value with hue and
@@ -103,7 +137,7 @@ def get_single_color_func(color):
 
         Parameters
         ----------
-        word, font_size, position, orientation  : ignored.
+        word, font_size, position, orientation, width, height : ignored.
 
         random_state : random.Random object or None, (default=None)
           If a random object is given, this is used for generating random numbers.
@@ -200,7 +234,7 @@ class WordCloud(object):
 
     def __init__(self, font_path=None, width=400, height=200, margin=2,
                  ranks_only=None, prefer_horizontal=0.9, mask=None, scale=1,
-                 color_func=random_color_func, max_words=200, min_font_size=4,
+                 color_func=gradient_color_func, max_words=200, min_font_size=4,
                  stopwords=None, random_state=None, background_color='black',
                  max_font_size=None, font_step=1, mode="RGB", relative_scaling=0):
         if font_path is None:
@@ -360,7 +394,9 @@ class WordCloud(object):
                                           position=(x, y),
                                           orientation=orientation,
                                           random_state=random_state,
-                                          font_path=self.font_paths))
+                                          font_path=self.font_paths,
+                                          width = width,
+                                          height = height))
             # recompute integral image
             if self.mask is None:
                 img_array = np.asarray(img_grey)
@@ -509,12 +545,20 @@ class WordCloud(object):
             random_state = Random(random_state)
         self._check_generated()
 
+        if self.mask is not None:
+            width = self.mask.shape[1]
+            height = self.mask.shape[0]
+        else:
+            height, width = self.height, self.width
+
         if color_func is None:
             color_func = self.color_func
         self.layout_ = [(word_freq, font_size, position, orientation, font_index,
                          color_func(word=word_freq[0], font_size=font_size,
                                     position=position, orientation=orientation,
-                                    random_state=random_state, font_path=self.font_paths[font_index]))
+                                    random_state=random_state, 
+                                    font_path=self.font_paths[font_index],
+                                    width = width, height = height))
                         for word_freq, font_size, position, orientation, font_index_ in self.layout_]
         return self
 
