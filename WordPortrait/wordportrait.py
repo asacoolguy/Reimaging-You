@@ -102,10 +102,22 @@ def gradient_color_func(word=None, font_size=None, position=None,
         If a random object is given, this is used for generating random numbers.
 
     """
+    # --- font size ---
+    hue = 240
+    sat = 30
+    lit = 30
+    if font_size > 25 : 
+        sat += font_size * 30 / 200 + 30
+        lit += font_size * 20 / 200 + 20
+
+
+    #sat = 30 + (font_size * 30 / 200)
+    #lit = 30 + (font_size * 40 / 200)
+
     # --- vertical ---
-    hue = position[0] * 260 / height
-    sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
-    lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+    #hue = position[0] * 260 / height
+    #sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+    #lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
 
     # --- horizontal ---
     #hue = position[1] * 260 / width 
@@ -114,7 +126,7 @@ def gradient_color_func(word=None, font_size=None, position=None,
     #hue = (position[0] + position[1]) * 260 / (width + height)
     #sat = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 70 
 
-    return "hsl(%d, %d%%, 50%%)" % (hue, sat)
+    return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 
 def get_single_color_func(color):
     """Create a color function which returns a single hue and saturation with.
@@ -348,6 +360,9 @@ class WordCloud(object):
         font_size = self.max_font_size
         last_freq = 1.
 
+        max_size = font_size
+        firstTime = True
+
         # start drawing grey image
         for word, freq in frequencies:
             # select the font size
@@ -360,6 +375,10 @@ class WordCloud(object):
 
                 # randomize a font path to use
                 font_index = random_state.randint(0, len(self.font_paths) - 1)
+                # if font size is in the middle, make it smaller
+                if font_size < max_size / 5 and font_size > max_size / 10:
+                    font_size = max_size / 10
+
                 font = ImageFont.truetype(self.font_paths[font_index], font_size)
                 # transpose font optionally
                 if random_state.random() < self.prefer_horizontal:
@@ -406,7 +425,11 @@ class WordCloud(object):
             # the order of the cumsum's is important for speed ?!
             occupancy.update(img_array, x, y)
             last_freq = freq
+            if firstTime :
+                max_size = font_size
+                firstTime = False
 
+        print max_size
         self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, colors, font_indecies))
         return self
 
