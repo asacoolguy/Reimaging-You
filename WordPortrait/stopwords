@@ -44,6 +44,7 @@ for
 from
 further
 get
+got
 had
 hadn't
 has
@@ -66,7 +67,6 @@ his
 how
 how's
 http
-i
 i'd
 if
 i'll
@@ -180,3 +180,20 @@ yours
 yourself
 yourselves
 you've
+<newline>
+,
+.
+!
+?
+;
+:
+"
+(
+)
++
+-
+_
+/
+\
+[
+]
