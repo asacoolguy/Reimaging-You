@@ -83,6 +83,18 @@ def random_color_func(word=None, font_size=None, position=None,
         random_state = Random()
     return "hsl(%d, 80%%, 50%%)" % random_state.randint(0, 255)
 
+def gradient_color_func2(word=None, font_size=None, position=None,
+                      orientation=None, font_path=None, random_state=None,
+                      width=None, height=None):
+
+    # --- diagonal ---
+    hue = (position[0] + position[1]) * 260 / (width + height)
+    sat = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 60 
+    lit = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 40 
+
+
+    return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
+
 def gradient_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
                       width=None, height=None):
@@ -429,7 +441,6 @@ class WordCloud(object):
                 max_size = font_size
                 firstTime = False
 
-        print max_size
         self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, colors, font_indecies))
         return self
 
@@ -576,13 +587,14 @@ class WordCloud(object):
 
         if color_func is None:
             color_func = self.color_func
-        self.layout_ = [(word_freq, font_size, position, orientation, font_index,
+        self.layout_ = [(word_freq, font_size, position, orientation, 
                          color_func(word=word_freq[0], font_size=font_size,
                                     position=position, orientation=orientation,
                                     random_state=random_state, 
                                     font_path=self.font_paths[font_index],
-                                    width = width, height = height))
-                        for word_freq, font_size, position, orientation, font_index_ in self.layout_]
+                                    width = width, height = height),
+                         font_index)
+                        for word_freq, font_size, position, orientation, _, font_index in self.layout_]
         return self
 
     def to_file(self, filename):

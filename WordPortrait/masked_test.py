@@ -34,6 +34,11 @@ stopwords_lower = set(map(str.lower, STOPWORDS))
 for row in results:
 	word = row[2]
 	freq = row[3]
+	#ope = row[5]
+	#ext = row[6]
+	#neu = row[7]
+	#agr = row[8]
+	#con = row[9]
 	if word.lower() in stopwords_lower:
 		continue
 
@@ -46,7 +51,7 @@ i = 0
 for row in words:
 	i = i + 1
 	print row
-	if i > 50:
+	if i > 0:
 		break
 
 
@@ -59,7 +64,10 @@ wc = WordCloud(background_color="white", max_words=3000, mask=obama_mask, prefer
 wc.generate_from_frequencies(words)
 
 # store to file
-wc.to_file(path.join(d, "obama_cloud.png"))
+wc.to_file(path.join(d, "test1.png"))
+
+#wc.recolor(color_func = gradient_color_func2)
+#wc.to_file(path.join(d, "test2.png"))
 
 image = wc.to_image()
 image.show()
