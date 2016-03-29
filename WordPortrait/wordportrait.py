@@ -65,7 +65,7 @@ class IntegralOccupancyMap(object):
 
 def random_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
-                      width=None, height=None):
+                      width=None, height=None, ocean=None):
     """Random hue color generation.
 
     Default coloring method. This just picks a random hue with value 80% and
@@ -83,21 +83,10 @@ def random_color_func(word=None, font_size=None, position=None,
         random_state = Random()
     return "hsl(%d, 80%%, 50%%)" % random_state.randint(0, 255)
 
-def gradient_color_func2(word=None, font_size=None, position=None,
-                      orientation=None, font_path=None, random_state=None,
-                      width=None, height=None):
-
-    # --- diagonal ---
-    hue = (position[0] + position[1]) * 260 / (width + height)
-    sat = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 60 
-    lit = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 40 
-
-
-    return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 
 def gradient_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
-                      width=None, height=None):
+                      width=None, height=None, ocean=None):
     """location based hue color generation.
 
     Custom coloring based on position of the word. 
@@ -106,7 +95,7 @@ def gradient_color_func(word=None, font_size=None, position=None,
 
     Parameters
     ----------
-    word, font_size, orientation : ignored.
+    word, font_size, orientation, ocean : ignored.
 
     position, width, height : used to calculate color
 
@@ -115,21 +104,21 @@ def gradient_color_func(word=None, font_size=None, position=None,
 
     """
     # --- single color based on font frequency ---
-    #hue = 240
-    #sat = 30
-    #lit = 30
-    #if font_size > 25 : 
-    #    sat += font_size * 30 / 200 + 30
-    #    lit += font_size * 20 / 200 + 20
+    hue = 240
+    sat = 30
+    lit = 30
+    if font_size > 25 : 
+        sat += font_size * 30 / 200 + 30
+        lit += font_size * 20 / 200 + 20
 
 
     #sat = 30 + (font_size * 30 / 200)
     #lit = 30 + (font_size * 40 / 200)
 
     # --- vertical ---
-    hue = position[0] * 260 / height
-    sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
-    lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+    # hue = position[0] * 260 / height
+    # sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+    # lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
 
     # --- horizontal ---
     #hue = position[1] * 260 / width 
@@ -137,6 +126,66 @@ def gradient_color_func(word=None, font_size=None, position=None,
     # --- diagonal ---
     #hue = (position[0] + position[1]) * 260 / (width + height)
     #sat = abs(position[0] + position[1] - ((width + height) / 2)) * 20 / ((width + height) / 2) + 70 
+
+    return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
+
+
+# function used to color words based on OCEAN scores
+def ocean_color_func(word=None, font_size=None, position=None,
+                      orientation=None, font_path=None, random_state=None,
+                      width=None, height=None, ocean = None):
+    # red 0, green: 137
+    # orange red 20, cyan 175
+    # orange 36, light blue - 206
+    # yellow 58, dark blue 265
+    # dark green 108, magenta 297
+
+    if random_state is None:
+        random_state = Random()
+
+    # if all 0, then random
+    if ocean[0] == 0 and ocean[1] == 0 and ocean[2] == 0 and ocean[3] == 0 and ocean[4] == 0:
+        hue = random_state.randint(0, 359)
+    else:
+        abs_ocean = (abs(ocean[0]), abs(ocean[1]), abs(ocean[2]), abs(ocean[3]), abs(ocean[4]))
+        max_value = max(abs_ocean)
+        max_index = abs_ocean.index(max_value)
+        max_value = ocean[max_index]
+
+        if max_index == 0: # ope. inventive/curious vs. consistent/cautious
+            if max_value > 0:
+                hue = 58 # yellow
+            else:
+                hue = 265 # darkblue
+        elif max_index == 1: # con. efficient/organized vs. easy-going/careless
+            if max_value > 0:
+                hue = 297 # magenta
+            else:
+                hue = 108 # dark green
+        elif max_index == 2: # ext. outgoing/energetic vs. solitary/reserved
+            if max_value > 0:
+                hue = 36 # orange
+            else:
+                hue = 206 # light blue
+        elif max_index == 3: # agr. friendly/compassionate vs. analytical/detached
+            if max_value > 0:
+                hue = 20 # orange red
+            else:
+                hue = 175 # cyan
+        elif max_index == 4: # neu. sensitive/nervous vs. secure/confident
+            if max_value > 0:
+                hue = 0 # red
+            else:
+                hue = 137 # green
+    
+    sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+    lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+
+    # sat = 30
+    # lit = 30
+    # if font_size > 25 : 
+    #    sat += font_size * 30 / 200 + 30
+    #    lit += font_size * 20 / 200 + 20
 
     return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 
@@ -153,7 +202,7 @@ def get_single_color_func(color):
 
     def single_color_func(word=None, font_size=None, position=None,
                           orientation=None, font_path=None, random_state=None,
-                          width=None, height=None):
+                          width=None, height=None, ocean=None):
         """Random color generation.
 
         Additional coloring method. It picks a random value with hue and
@@ -237,6 +286,12 @@ class WordCloud(object):
         If you want to consider the word frequencies and not only their rank, relative_scaling
         around .5 often looks good.
 
+    upper_font_filter, lower_font_filter: float (default = 0)
+        thresholds for font size filtering. all fonts of size that's smaller than the 
+        upper_font_filter * max_font_size will be made into sizes smaller than the 
+        lower_font_filter * max_font_size
+
+
     Attributes
     ----------
     ``words_``: list of tuples (string, float)
@@ -260,7 +315,8 @@ class WordCloud(object):
                  ranks_only=None, prefer_horizontal=0.9, mask=None, scale=1,
                  color_func=gradient_color_func, max_words=200, min_font_size=4,
                  stopwords=None, random_state=None, background_color='black',
-                 max_font_size=None, font_step=1, mode="RGB", relative_scaling=0):
+                 max_font_size=None, font_step=1, mode="RGB", relative_scaling=0,
+                 upper_font_filter=None, lower_font_filter=None):
         if font_path is None:
             font_paths = FONT_PATHS
         else:
@@ -289,6 +345,8 @@ class WordCloud(object):
             raise ValueError("relative_scaling needs to be between 0 and 1, got %f."
                              % relative_scaling)
         self.relative_scaling = relative_scaling
+        self.upper_font_filter = upper_font_filter
+        self.lower_font_filter = lower_font_filter
         if ranks_only is not None:
             warnings.warn("ranks_only is deprecated and will be removed as"
                           " it had no effect. Look into relative_scaling.", DeprecationWarning)
@@ -315,7 +373,8 @@ class WordCloud(object):
         Parameters
         ----------
         frequencies : array of tuples
-            A tuple contains the word and its frequency.
+            A tuple contains the word, its frequency, 
+            and a tuple of its ocean scores in OCEAN order
 
         Returns
         -------
@@ -325,12 +384,26 @@ class WordCloud(object):
         # make sure frequencies are sorted and normalized
         frequencies = sorted(frequencies, key=item1, reverse=True)
         frequencies = frequencies[:self.max_words]
-        # largest entry will be 1
+        # largest entry will be 1 for freq and ocean scores 
         max_frequency = float(frequencies[0][1])
+        max_ope = max(frequencies, key=itemgetter(2))[2]
+        max_con = max(frequencies, key=itemgetter(3))[3]
+        max_ext = max(frequencies, key=itemgetter(4))[4]
+        max_agr = max(frequencies, key=itemgetter(5))[5]
+        max_neu = max(frequencies, key=itemgetter(6))[6]
 
-        frequencies = [(word, freq / max_frequency) for word, freq in frequencies]
+        frequencies = [(word, freq / max_frequency, 
+                        ope / max_ope, 
+                        con / max_con,
+                        ext / max_ext, 
+                        agr / max_agr, 
+                        neu / max_neu) 
+                    for word, freq, ope, con, ext, agr, neu in frequencies]
 
         self.words_ = frequencies
+
+        # variabled used to find actual largest font size
+        max_actual_size = 0
 
         # gives self a random state object for random generation
         if self.random_state is not None:
@@ -367,31 +440,37 @@ class WordCloud(object):
         img_grey = Image.new("L", (width, height))
         draw = ImageDraw.Draw(img_grey)
         img_array = np.asarray(img_grey)
-        font_sizes, positions, orientations, colors, font_indecies = [], [], [], [], []
+        font_sizes, positions, orientations, colors, font_indecies, oceans = [], [], [], [], [], []
 
         font_size = self.max_font_size
         last_freq = 1.
 
-        max_size = font_size
-        firstTime = True
-
         # start drawing grey image
-        for word, freq in frequencies:
+        for word, freq, ope, con, ext, agr, neu in frequencies:
             # select the font size
             rs = self.relative_scaling
             if rs != 0:
                 # relative size heuristics. might not want to mess with this?
                 font_size = int(round((rs * (freq / float(last_freq)) + (1 - rs)) * font_size))
+            # try to find a position
             while True:
-                # try to find a position
-
                 # randomize a font path to use
                 font_index = random_state.randint(0, len(self.font_paths) - 1)
-                # if font size is in the middle, make it smaller
-                if font_size < max_size / 5 and font_size > max_size / 10:
-                    font_size = max_size / 10
+                
+                # set max actual size
+                if len(font_sizes) > 0:
+                    max_actual_size = font_sizes[0]
+
+                # font size is in the middle, make it smaller
+                # this check will be ignored if max_actual_size is 0 aka not set yet
+                # this check will also always fail if upper_font_filter is 0 aka not set
+                if font_size < max_actual_size * self.upper_font_filter \
+                    and font_size > max_actual_size * self.lower_font_filter:
+                    font_size = max_actual_size * self.lower_font_filter
+
 
                 font = ImageFont.truetype(self.font_paths[font_index], font_size)
+
                 # transpose font optionally
                 if random_state.random() < self.prefer_horizontal:
                     orientation = None
@@ -421,13 +500,16 @@ class WordCloud(object):
             orientations.append(orientation)
             font_sizes.append(font_size)
             font_indecies.append(font_index)
+            ocean = (ope, con, ext, agr, neu)
+            oceans.append(ocean)
             colors.append(self.color_func(word, font_size=font_size,
                                           position=(x, y),
                                           orientation=orientation,
                                           random_state=random_state,
                                           font_path=self.font_paths,
                                           width = width,
-                                          height = height))
+                                          height = height,
+                                          ocean = ocean))
             # recompute integral image
             if self.mask is None:
                 img_array = np.asarray(img_grey)
@@ -437,11 +519,9 @@ class WordCloud(object):
             # the order of the cumsum's is important for speed ?!
             occupancy.update(img_array, x, y)
             last_freq = freq
-            if firstTime :
-                max_size = font_size
-                firstTime = False
 
-        self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, colors, font_indecies))
+        print(len(oceans))
+        self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, font_indecies, oceans, colors))
         return self
 
     def process_text(self, text):
@@ -548,7 +628,7 @@ class WordCloud(object):
         img = Image.new(self.mode, (int(width * self.scale), int(height * self.scale)),
                         self.background_color)
         draw = ImageDraw.Draw(img)
-        for (word, count), font_size, position, orientation, color, font_index in self.layout_:
+        for (word, count, o, c, e, a, n), font_size, position, orientation, font_index, _, color in self.layout_:
             font = ImageFont.truetype(self.font_paths[font_index], int(font_size * self.scale))
             transposed_font = ImageFont.TransposedFont(font,
                                                        orientation=orientation)
@@ -587,14 +667,15 @@ class WordCloud(object):
 
         if color_func is None:
             color_func = self.color_func
-        self.layout_ = [(word_freq, font_size, position, orientation, 
+        self.layout_ = [(word_freq, font_size, position, orientation, font_index, ocean,
                          color_func(word=word_freq[0], font_size=font_size,
                                     position=position, orientation=orientation,
                                     random_state=random_state, 
                                     font_path=self.font_paths[font_index],
-                                    width = width, height = height),
-                         font_index)
-                        for word_freq, font_size, position, orientation, _, font_index in self.layout_]
+                                    width = width, height = height,
+                                    ocean = ocean),
+                         )
+                        for word_freq, font_size, position, orientation, font_index, ocean, color in self.layout_]
         return self
 
     def to_file(self, filename):

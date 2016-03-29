@@ -26,40 +26,43 @@ db = MySQLdb.connect(host="localhost", port=3306, user="root", passwd="localroot
 cursor = db.cursor()
 cursor.execute("SELECT * FROM ethan_status")
 
-# filter table into array of tuples 
+# filter table into lists of tuples 
 results = cursor.fetchall()
 words = []
-# filter out stopwords
+
 stopwords_lower = set(map(str.lower, STOPWORDS))
 for row in results:
 	word = row[2]
 	freq = row[3]
-	#ope = row[5]
-	#ext = row[6]
-	#neu = row[7]
-	#agr = row[8]
-	#con = row[9]
+	ope = row[5]
+	ext = row[6]
+	neu = row[7]
+	agr = row[8]
+	con = row[9]
+	# filter out stopwords
 	if word.lower() in stopwords_lower:
 		continue
 
-	tup = (word,freq)
+	tup = (word, freq, ope, con, ext, agr, neu)
 	words.append(tup)
 
+# sort words from largest freq to smallest
 words.sort(key=itemgetter(1), reverse=True)
 
-i = 0
-for row in words:
-	i = i + 1
-	print row
-	if i > 0:
-		break
+# i = 0
+# for row in words:
+# 	i = i + 1
+# 	print row
+# 	if i > 0:
+# 		break
 
 
 # read the mask image
 obama_mask = np.array(Image.open(path.join(d, "obama_threshold.jpg")))
 
 wc = WordCloud(background_color="white", max_words=3000, mask=obama_mask, prefer_horizontal=1,
-	min_font_size = 1,)
+	min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
+	color_func = gradient_color_func)
 # generate word cloud
 wc.generate_from_frequencies(words)
 
