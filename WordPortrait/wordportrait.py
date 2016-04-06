@@ -104,21 +104,21 @@ def gradient_color_func(word=None, font_size=None, position=None,
 
     """
     # --- single color based on font frequency ---
-    hue = 240
-    sat = 30
-    lit = 30
-    if font_size > 25 : 
-        sat += font_size * 30 / 200 + 30
-        lit += font_size * 20 / 200 + 20
+    # hue = 240
+    # sat = 30
+    # lit = 30
+    # if font_size > 25 : 
+    #     sat += font_size * 30 / 200 + 30
+    #     lit += font_size * 20 / 200 + 20
 
 
     #sat = 30 + (font_size * 30 / 200)
     #lit = 30 + (font_size * 40 / 200)
 
     # --- vertical ---
-    # hue = position[0] * 260 / height
-    # sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
-    # lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+    hue = position[0] * 260 / height
+    sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+    lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
 
     # --- horizontal ---
     #hue = position[1] * 260 / width 
@@ -520,7 +520,6 @@ class WordCloud(object):
             occupancy.update(img_array, x, y)
             last_freq = freq
 
-        print(len(oceans))
         self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, font_indecies, oceans, colors))
         return self
 
