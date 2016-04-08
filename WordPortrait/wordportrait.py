@@ -28,6 +28,7 @@ FONT_PATHS = [os.path.join(os.path.dirname(__file__), "fonts/Debby.ttf"),
             os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
             os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
             os.path.join(os.path.dirname(__file__), "fonts/VarianeScript.ttf"),
+            os.path.join(os.path.dirname(__file__), "fonts/MasterOfBreak.ttf"),
             ]
 STOPWORDS = set([x.strip() for x in open(os.path.join(os.path.dirname(__file__),
                                                       'stopwords')).read().split('\n')])
@@ -291,6 +292,11 @@ class WordCloud(object):
         upper_font_filter * max_font_size will be made into sizes smaller than the 
         lower_font_filter * max_font_size
 
+    random_noise: float (default = 0)
+        randomly picks out certain words and makes them bigger than usual to inject some noise.
+        only happens to words that are larger than 2/3 * largest size
+        *** dont use this for now it doesn't quite work ***
+
 
     Attributes
     ----------
@@ -316,7 +322,7 @@ class WordCloud(object):
                  color_func=gradient_color_func, max_words=200, min_font_size=4,
                  stopwords=None, random_state=None, background_color='black',
                  max_font_size=None, font_step=1, mode="RGB", relative_scaling=0,
-                 upper_font_filter=None, lower_font_filter=None):
+                 upper_font_filter=None, lower_font_filter=None, random_noise=0):
         if font_path is None:
             font_paths = FONT_PATHS
         else:
@@ -347,6 +353,7 @@ class WordCloud(object):
         self.relative_scaling = relative_scaling
         self.upper_font_filter = upper_font_filter
         self.lower_font_filter = lower_font_filter
+        self.random_noise = random_noise
         if ranks_only is not None:
             warnings.warn("ranks_only is deprecated and will be removed as"
                           " it had no effect. Look into relative_scaling.", DeprecationWarning)
@@ -452,6 +459,7 @@ class WordCloud(object):
             if rs != 0:
                 # relative size heuristics. might not want to mess with this?
                 font_size = int(round((rs * (freq / float(last_freq)) + (1 - rs)) * font_size))
+
             # try to find a position
             while True:
                 # randomize a font path to use
@@ -467,6 +475,7 @@ class WordCloud(object):
                 if font_size < max_actual_size * self.upper_font_filter \
                     and font_size > max_actual_size * self.lower_font_filter:
                     font_size = max_actual_size * self.lower_font_filter
+
 
 
                 font = ImageFont.truetype(self.font_paths[font_index], font_size)
@@ -492,6 +501,12 @@ class WordCloud(object):
             if font_size < self.min_font_size:
                 # we were unable to draw any more
                 break
+
+            # if len(font_sizes) > 0 and font_size > font_sizes[0] * 2 / 3 and \
+            #     random_state.random() < self.random_noise:
+            #     font_size *= 2
+            # if len(font_sizes) < 5:
+            #         font_size *= 2
 
             x, y = np.array(result) + self.margin // 2
             # actually draw the text

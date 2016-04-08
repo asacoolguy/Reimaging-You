@@ -114,8 +114,8 @@ words.sort(key=itemgetter(1), reverse=True)
 
 # read the mask image
 
-filename = "jolie"
-makeMask(filename, 1500)
+filename = "ethan"
+makeMask(filename, 2000)
 mask = np.array(Image.open("thresholdTest/adaptiveThreshold/" + filename + "_combined_threshold.jpg"))
 
 wc = WordCloud(background_color="white", max_words=5000, mask=mask, prefer_horizontal=1,
