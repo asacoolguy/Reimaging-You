@@ -23,13 +23,15 @@ from query_integral_image import query_integral_image
 
 item1 = itemgetter(1)
 
-
+# paths for the fonts used. remember to put the bold/cursive ones first
 FONT_PATHS = [os.path.join(os.path.dirname(__file__), "fonts/Debby.ttf"),
-            os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
-            os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
             os.path.join(os.path.dirname(__file__), "fonts/VarianeScript.ttf"),
             os.path.join(os.path.dirname(__file__), "fonts/MasterOfBreak.ttf"),
+            os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
+            os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
             ]
+BOLD_FONTS_INDEX = 2
+
 STOPWORDS = set([x.strip() for x in open(os.path.join(os.path.dirname(__file__),
                                                       'stopwords')).read().split('\n')])
 
@@ -229,10 +231,10 @@ class WordCloud(object):
 
     Parameters
     ----------
-    font_path : string
-        Font path to the font that will be used (OTF or TTF).
-        Defaults to DroidSansMono path on a Linux machine. If you are on
-        another OS or don't have this font, you need to adjust this path.
+    font_path : array of string
+        Font paths of the fonts that will be used (OTF or TTF).
+
+    bold_fonts_index (default = BOLD_FONTS_INDEX)
 
     width : int (default=400)
         Width of the canvas.
@@ -297,6 +299,11 @@ class WordCloud(object):
         only happens to words that are larger than 2/3 * largest size
         *** dont use this for now it doesn't quite work ***
 
+    bold_font_threshold (default = number of fonts / 2)
+        threshold for which fonts to use for each word depending on word size.
+        word with size larger than bold_font_threshold * max_font_size will use bold fonts
+        words smaller will use normal fonts
+
 
     Attributes
     ----------
@@ -317,16 +324,22 @@ class WordCloud(object):
     scaling heuristic.
     """
 
-    def __init__(self, font_path=None, width=400, height=200, margin=2,
+    def __init__(self, font_path=None, bold_fonts_index=None, width=400, height=200, margin=2,
                  ranks_only=None, prefer_horizontal=0.9, mask=None, scale=1,
                  color_func=gradient_color_func, max_words=200, min_font_size=4,
                  stopwords=None, random_state=None, background_color='black',
                  max_font_size=None, font_step=1, mode="RGB", relative_scaling=0,
-                 upper_font_filter=None, lower_font_filter=None, random_noise=0):
+                 upper_font_filter=None, lower_font_filter=None, random_noise=0,
+                 bold_font_threshold=None):
         if font_path is None:
             font_paths = FONT_PATHS
         else:
             font_paths = [font_path]
+        if bold_fonts_index is None:
+            self.bold_fonts_index = BOLD_FONTS_INDEX
+        else:
+            self.bold_fonts_index = bold_fonts_index
+
         self.font_paths = font_paths
         self.width = width
         self.height = height
@@ -353,6 +366,11 @@ class WordCloud(object):
         self.relative_scaling = relative_scaling
         self.upper_font_filter = upper_font_filter
         self.lower_font_filter = lower_font_filter
+        if bold_font_threshold is None:
+            self.bold_font_threshold = 1/2
+        else:
+            self.bold_font_threshold = bold_font_threshold
+        
         self.random_noise = random_noise
         if ranks_only is not None:
             warnings.warn("ranks_only is deprecated and will be removed as"
@@ -438,9 +456,13 @@ class WordCloud(object):
                 boolean_mask = np.all(mask[:, :, :3] == 255, axis=-1)
             else:
                 raise ValueError("Got mask of invalid shape: %s" % str(mask.shape))
+
+            # reset the max font size
+            font_size = height * 1 / 4
         else:
             boolean_mask = None
             height, width = self.height, self.width
+            font_size = self.max_font_size
         occupancy = IntegralOccupancyMap(height, width, boolean_mask)
 
         # create image
@@ -449,7 +471,7 @@ class WordCloud(object):
         img_array = np.asarray(img_grey)
         font_sizes, positions, orientations, colors, font_indecies, oceans = [], [], [], [], [], []
 
-        font_size = self.max_font_size
+        
         last_freq = 1.
 
         # start drawing grey image
@@ -461,12 +483,9 @@ class WordCloud(object):
                 font_size = int(round((rs * (freq / float(last_freq)) + (1 - rs)) * font_size))
 
             # try to find a position
-            while True:
-                # randomize a font path to use
-                font_index = random_state.randint(0, len(self.font_paths) - 1)
-                
+            while True:                
                 # set max actual size
-                if len(font_sizes) > 0:
+                if len(font_sizes) > 0 and len(font_sizes) < 2:
                     max_actual_size = font_sizes[0]
 
                 # font size is in the middle, make it smaller
@@ -476,7 +495,14 @@ class WordCloud(object):
                     and font_size > max_actual_size * self.lower_font_filter:
                     font_size = max_actual_size * self.lower_font_filter
 
-
+                # randomize a font path to use based on bold_font_threshold
+                # if len(font_sizes) is 0 or font_size > max_actual_size * self.bold_font_threshold:
+                #     # use bold fonts
+                #     font_index = random_state.randint(0, self.bold_fonts_index)
+                # else:
+                #     # use normal fonts
+                #     font_index = random_state.randint(self.bold_fonts_index + 1, len(self.font_paths) - 1)
+                font_index = random_state.randint(0, len(self.font_paths) - 1)
 
                 font = ImageFont.truetype(self.font_paths[font_index], font_size)
 
@@ -535,6 +561,7 @@ class WordCloud(object):
             occupancy.update(img_array, x, y)
             last_freq = freq
 
+        print max_actual_size
         self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, font_indecies, oceans, colors))
         return self
 

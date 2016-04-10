@@ -48,7 +48,6 @@ def resizeImg(img, maxSize):
 def makeMask(filename, imgSize):
 	# open the image, resize it and turn it to greyscale
 	image = Image.open('thresholdTest/' + filename + '.jpg').convert('L')
-	image = resizeImg(image, imgSize)
 	greyscale = np.array(image)
 
 	# compute the global and adaptive thresholds
@@ -115,17 +114,22 @@ words.sort(key=itemgetter(1), reverse=True)
 # read the mask image
 
 filename = "ethan"
-makeMask(filename, 2000)
-mask = np.array(Image.open("thresholdTest/adaptiveThreshold/" + filename + "_combined_threshold.jpg"))
+threshold = 3/4
+imgSize = 10800
+makeMask(filename, imgSize)
+
+image = Image.open("thresholdTest/adaptiveThreshold/" + filename + "_combined_threshold.jpg")
+resizedImage = resizeImg(image, imgSize)
+mask = np.array(resizedImage)
 
 wc = WordCloud(background_color="white", max_words=5000, mask=mask, prefer_horizontal=1,
 	min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
-	color_func = gradient_color_func)
+	color_func = gradient_color_func, bold_font_threshold=threshold)
 # generate word cloud
 wc.generate_from_frequencies(words)
 
 # store to file
-wc.to_file("thresholdTest/adaptiveThreshold/" + filename + "_cloud.jpg")
+wc.to_file("thresholdTest/sizeTest/" + filename + ".jpg")
 
 #wc.recolor(color_func = gradient_color_func2)
 #wc.to_file(path.join(d, "test2.png"))
