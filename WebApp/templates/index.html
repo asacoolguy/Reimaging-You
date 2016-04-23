@@ -66,10 +66,36 @@
  
 <body>
  
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '1577393635894666',
+          xfbml      : true,
+          version    : 'v2.5'
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "//connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+    </script>
+
     <div class="container">
         <div class="header">
             <h2 class="text-muted">Typographic Portrait Prototype</h2>
         </div>
+
+        <div
+          class="fb-like"
+          data-share="true"
+          data-width="450"
+          data-show-faces="true">
+        </div>
+
         <div class="content">
             <textarea rows="15" cols="60" type="text" name="text" id="textBox">Enter your text here.</textarea>
             {% if uploaded_portrait %}
@@ -86,10 +112,12 @@
             <p><a href="javascript:void();" id="generate">generate your portrait</a>
             </form>
         </div>
+
         <div class="generated">
             <img id="loading" src="./static/images/utility/loading_spinner.gif">
             <img id="generated_portrait" style="width:100%;max-width:500px" src="./static/images/originals/silouette.png">
         </div>
+        
     </div>
 </body>
  

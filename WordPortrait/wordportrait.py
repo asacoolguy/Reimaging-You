@@ -68,7 +68,7 @@ class IntegralOccupancyMap(object):
 
 def random_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
-                      width=None, height=None, ocean=None):
+                      width=None, height=None, ocean=None, personality_score=None):
     """Random hue color generation.
 
     Default coloring method. This just picks a random hue with value 80% and
@@ -89,7 +89,7 @@ def random_color_func(word=None, font_size=None, position=None,
 
 def gradient_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
-                      width=None, height=None, ocean=None):
+                      width=None, height=None, ocean=None, personality_score=None):
     """location based hue color generation.
 
     Custom coloring based on position of the word. 
@@ -136,7 +136,7 @@ def gradient_color_func(word=None, font_size=None, position=None,
 # function used to color words based on OCEAN scores
 def ocean_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
-                      width=None, height=None, ocean = None):
+                      width=None, height=None, ocean = None, personality_score=None):
     # red 0, green: 137
     # orange red 20, cyan 175
     # orange 36, light blue - 206
@@ -192,6 +192,82 @@ def ocean_color_func(word=None, font_size=None, position=None,
 
     return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 
+# function used to color words in a gradient based on OCEAN scores
+def ocean_gradient_color_func(word=None, font_size=None, position=None,
+                      orientation=None, font_path=None, random_state=None,
+                      width=None, height=None, ocean = None, personality_score=None):
+    # yellow, green, blue, purple, red
+    # 53, 117, 237, 280, 360
+    # hues = [53, 117, 237, 280, 360]
+    hues = [0, 53, 117, 220, 280]
+    abs_score = [abs(i) for i in personality_score]
+    method = 1
+
+    # --- method 1 ---
+    # 1 color per trait. dominant color used. gradient between dark and light
+    if method == 1:
+        maxScore = max(abs_score)
+        maxIndex = abs_score.index(maxScore)
+        hue = hues[maxIndex]
+
+        midHeight = abs(personality_score[1]) / (abs(personality_score[1]) + abs(personality_score[2])) * height
+        Lit1 = 65
+        Lit2 = 25
+        midLit = (Lit1 + Lit2) / 2
+
+        sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+        if position[0] < midHeight:
+            lit = position[0] * (midLit - Lit1) / midHeight + Lit1
+        else:
+            lit = (position[0] - midHeight) * (Lit2 - midLit) / (height - midHeight) + midLit
+
+    # --- method 2 ---
+    if method == 2:
+        score_sum = sum(abs_score)
+        # individual heights for each section
+        gradient_heights = [i / score_sum * height for i in abs_score]
+        # the height value for the end of each section
+        additive_heights = [gradient_heights[0], 0,0,0]
+        for i in range(1,4):
+            additive_heights[i] = additive_heights[i-1] + gradient_heights[i]
+        #print gradient_heights
+        #print additive_heights
+        mid_hues = [(hues[i] + hues[i+1]) / 2 for i in range(4)]
+        #print mid_hues
+        # positive scores are light while negatives are dark
+        lightness = [0,0,0,0,0]
+        for i in range(len(lightness)):
+            if (personality_score[i] >= 0):
+                lightness[i] = 60
+            else:
+                lightness[i] = 25
+        mid_lightness = [(lightness[i] + lightness[i+1]) / 2 for i in range(4)]
+
+        # interpolate the hue and lightness
+        if position[0] < additive_heights[0]:
+            hue = position[0] * (mid_hues[0] - hues[0]) / gradient_heights[0] + hues[0]
+            lit = position[0] * (mid_lightness[0] - lightness[0]) / gradient_heights[0] + lightness[0]
+        elif position[0] < additive_heights[1]:
+            hue = (position[0] - additive_heights[0]) * (mid_hues[1] - mid_hues[0]) / gradient_heights[1] + mid_hues[0]
+            lit = (position[0] - additive_heights[0]) * (mid_lightness[1] - mid_lightness[0]) / gradient_heights[1] + mid_lightness[0]
+        elif position[0] < additive_heights[2]:
+            hue = (position[0] - additive_heights[1]) * (mid_hues[2] - mid_hues[1]) / gradient_heights[2] + mid_hues[1]
+            lit = (position[0] - additive_heights[1]) * (mid_lightness[2] - mid_lightness[1]) / gradient_heights[2] + mid_lightness[1]
+        elif position[0] < additive_heights[3]:
+            hue = (position[0] - additive_heights[2]) * (mid_hues[3] - mid_hues[2]) / gradient_heights[3] + mid_hues[2]
+            lit = (position[0] - additive_heights[2]) * (mid_lightness[3] - mid_lightness[2]) / gradient_heights[3] + mid_lightness[2]
+        else:
+            hue = (position[0] - additive_heights[3]) * (hues[4] - mid_hues[3]) / gradient_heights[4] + mid_hues[3]
+            lit = (position[0] - additive_heights[3]) * (lightness[4] - mid_lightness[3]) / gradient_heights[4] + mid_lightness[3]
+
+        sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+        # lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+
+    return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
+
+
+
+
 def get_single_color_func(color):
     """Create a color function which returns a single hue and saturation with.
     different values (HSV). Accepted values are color strings as usable by PIL/Pillow.
@@ -205,7 +281,7 @@ def get_single_color_func(color):
 
     def single_color_func(word=None, font_size=None, position=None,
                           orientation=None, font_path=None, random_state=None,
-                          width=None, height=None, ocean=None):
+                          width=None, height=None, ocean=None, personality_score=None):
         """Random color generation.
 
         Additional coloring method. It picks a random value with hue and
@@ -304,6 +380,9 @@ class WordCloud(object):
         word with size larger than bold_font_threshold * max_font_size will use bold fonts
         words smaller will use normal fonts
 
+    personality_score: list of 5 ints (default = [1,1,1,1,1])
+        scores of the 5 ocean traits. used for ocean gradient color func.
+
 
     Attributes
     ----------
@@ -330,7 +409,7 @@ class WordCloud(object):
                  stopwords=None, random_state=None, background_color='black',
                  max_font_size=None, font_step=1, mode="RGB", relative_scaling=0,
                  upper_font_filter=None, lower_font_filter=None, random_noise=0,
-                 bold_font_threshold=None):
+                 bold_font_threshold=None, personality_score=None):
         if font_path is None:
             font_paths = FONT_PATHS
         else:
@@ -370,7 +449,12 @@ class WordCloud(object):
             self.bold_font_threshold = 1/2
         else:
             self.bold_font_threshold = bold_font_threshold
-        
+        if personality_score is None:
+            self.personality_score = [1,1,1,1,1]
+        else:
+            self.personality_score = personality_score
+
+
         self.random_noise = random_noise
         if ranks_only is not None:
             warnings.warn("ranks_only is deprecated and will be removed as"
@@ -550,7 +634,8 @@ class WordCloud(object):
                                           font_path=self.font_paths,
                                           width = width,
                                           height = height,
-                                          ocean = ocean))
+                                          ocean = ocean,
+                                          personality_score = self.personality_score))
             # recompute integral image
             if self.mask is None:
                 img_array = np.asarray(img_grey)
@@ -712,9 +797,9 @@ class WordCloud(object):
                          color_func(word=word_freq[0], font_size=font_size,
                                     position=position, orientation=orientation,
                                     random_state=random_state, 
-                                    font_path=self.font_paths[font_index],
+                                    font_path=self.font_paths,
                                     width = width, height = height,
-                                    ocean = ocean),
+                                    ocean = ocean, personality_score = self.personality_score),
                          )
                         for word_freq, font_size, position, orientation, font_index, ocean, color in self.layout_]
         return self
