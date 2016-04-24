@@ -111,26 +111,26 @@ for row in results:
 	personaltyScores[3] += group_norm * agr
 	personaltyScores[4] += group_norm * neu
 
-	# if ope > 0:
-	# 	posScore[0] += group_norm * ope
-	# else:
-	# 	negScore[0] += group_norm * ope
-	# if con > 0:
-	# 	posScore[1] += group_norm * con
-	# else:
-	# 	negScore[1] += group_norm * con
-	# if ext > 0:
-	# 	posScore[2] += group_norm * ext
-	# else:
-	# 	negScore[2] += group_norm * ext
-	# if agr > 0:
-	# 	posScore[3] += group_norm * agr
-	# else:
-	# 	negScore[3] += group_norm * agr
-	# if neu > 0:
-	# 	posScore[4] += group_norm * neu
-	# else:
-	# 	negScore[4] += group_norm * neu
+	if ope > 0:
+		posScore[0] += group_norm * ope
+	else:
+		negScore[0] += group_norm * ope
+	if con > 0:
+		posScore[1] += group_norm * con
+	else:
+		negScore[1] += group_norm * con
+	if ext > 0:
+		posScore[2] += group_norm * ext
+	else:
+		negScore[2] += group_norm * ext
+	if agr > 0:
+		posScore[3] += group_norm * agr
+	else:
+		negScore[3] += group_norm * agr
+	if neu > 0:
+		posScore[4] += group_norm * neu
+	else:
+		negScore[4] += group_norm * neu
 
 
 	# filter out stopwords
@@ -147,18 +147,19 @@ words.sort(key=itemgetter(1), reverse=True)
 maxScore = max(abs(i) for i in personaltyScores)
 personaltyScores[:] = [i / maxScore for i in personaltyScores]
 # print maxScore
-#print personaltyScores
-#print posScore
-#maxScore1 = max(abs(i) for i in posScore)
-#maxScore2 = max(abs(i) for i in negScore)
-#maxScore3 = max(maxScore1, maxScore2)
-#posScore[:] = [i / maxScore3 for i in posScore]
-#negScore[:] = [i / maxScore3 for i in negScore]
-
-#personaltyScores[1] = posScore[0]
-#personaltyScores[2] = negScore[0]
+maxScore1 = max(abs(i) for i in posScore)
+maxScore2 = max(abs(i) for i in negScore)
+maxScore3 = max(maxScore1, maxScore2)
+posScore[:] = [i / maxScore3 for i in posScore]
+negScore[:] = [i / maxScore3 for i in negScore]
 print personaltyScores
-personaltyScores = [0.1, 0.2, -0.5, 0.11, -1]
+print posScore
+print negScore
+
+personaltyScores = [1.0, -0.046, -0.35, -0.047, 0.21]
+posScore = [.15, 0.46, 0.53, 0.40, 0.45]
+negScore = [-1.0, -0.49, -0.72, -0.42, -0.33]
+
 # read the mask image
 filename = "ethan"
 threshold = 3/4
@@ -171,12 +172,13 @@ mask = np.array(resizedImage)
 
 wc = WordCloud(background_color="white", max_words=6000, mask=mask, prefer_horizontal=1,
 	min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
-	color_func = gradient_color_func, bold_font_threshold=threshold, personality_score=personaltyScores)
+	color_func = gradient_color_func, bold_font_threshold=threshold, personality_score=personaltyScores,
+	pos_score = posScore, neg_score = negScore)
 # generate word cloud
 wc.generate_from_frequencies(words)
 
 # store to file
-wc.to_file("tests/sizeTest/" + filename + ".jpg")
+wc.to_file("tests/OCEAN_color_gradient/" + filename + "_ope.jpg")
 
 #wc.recolor(color_func = gradient_color_func2)
 #wc.to_file(path.join(d, "test2.png"))
