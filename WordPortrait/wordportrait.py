@@ -196,85 +196,113 @@ def ocean_color_func(word=None, font_size=None, position=None,
     return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 
 # function used to color words in a gradient based on OCEAN scores
+# method 1: 1 color per trait. dominant color used. gradient between dark and light. 
+# rainbow for balanced ocean scores
 def ocean_gradient_color_func(word=None, font_size=None, position=None,
                       orientation=None, font_path=None, random_state=None,
                       width=None, height=None, ocean = None, personality_score=None,
                       pos_score=None, neg_score=None):
-    # yellow, green, blue, purple, red
-    # 53, 117, 237, 280, 360
-    # hues = [53, 117, 237, 280, 360]
-    # orange, yellow, green, cyan, blue
-    hues = [15, 53, 120, 185, 225]
-    hues2 = [5, 43, 120, 195, 235]
+    # calculate the max index
     abs_score = [abs(i) for i in personality_score]
-    method = 1
+    maxScore = max(abs_score)
+    maxIndex = abs_score.index(maxScore)
 
-    # --- method 1 ---
-    # 1 color per trait. dominant color used. gradient between dark and light
-    if method == 1:
-        maxScore = max(abs_score)
-        maxIndex = abs_score.index(maxScore)
-        maxIndex = 0
+    # check if personaity is balanced. if so, do rainbow
+    # let's say if all numbers are greater than .6 after normalization it's a balanced personality
+    balanced = True
+    for i in range(len(abs_score)):
+        if abs_score[i] < 0.6:
+            balanced = False
+
+    if balanced is True:
+        hue = position[0] * 260 / height
+        sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+        lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+    else:
+        # not balanced, find dominant score 
+        # orange, yellow, green, cyan, blue
+        hues = [15, 53, 120, 185, 225]
+        hues2 = [5, 43, 120, 195, 235]        
+
+        # make sure we don't have high neuroticism
+        if maxIndex == 4 and abs(pos_score[maxIndex]) > abs(neg_score[maxIndex]):
+            abs_score[4] = 0
+            maxScore = max(abs_score)
+            maxIndex = abs_score.index(maxScore)         
+        # make sure we don't have low aggreeableness
+        if maxIndex == 3 and abs(neg_score[maxIndex]) > abs(pos_score[maxIndex]):
+            abs_score[3] = 0
+            maxScore = max(abs_score)
+            maxIndex = abs_score.index(maxScore) 
+
         hue1 = hues[maxIndex]
         hue2 = hues2[maxIndex]
 
         midHeight = abs(pos_score[maxIndex]) / (abs(pos_score[maxIndex]) + abs(neg_score[maxIndex])) * height
-        Lit1 = 65
+        Lit1 = 60
         Lit2 = 35
         midLit = (Lit1 + Lit2) / 2
         midHue = (hue1 + hue2) / 2
 
         sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
-        if position[0] < midHeight:
-            hue = pow(position[0], 3) / pow(midHeight, 3) * (midHue - hue1) + hue1
-            lit = pow(position[0], 3) / pow(midHeight, 3) * (midLit - Lit1) + Lit1
+        if position[0] <= midHeight:
+            hue = pow(position[0] / midHeight, 3) * (midHue - hue1) + hue1
+            lit = pow(position[0] / midHeight, 3) * (midLit - Lit1) + Lit1
         else:
-            #lit = pow((position[0] - midHeight), 3) * (Lit2 - midLit) / pow((height - midHeight), 3) + midLit
-            hue = hue2 - pow((height - position[0]), 3) / pow((height - midHeight), 3) * (hue2 - midHue)
-            lit = Lit2 - pow((height - position[0]), 3) / pow((height - midHeight), 3) * (Lit2 - midLit)
+            hue = hue2 - pow((height - position[0]) / (height - midHeight), 3) * (hue2 - midHue)
+            lit = Lit2 - pow((height - position[0]) / (height - midHeight), 3) * (Lit2 - midLit)
 
-    # --- method 2 ---
-    # 5 colors, 1 per trait. 
-    if method == 2:
-        score_sum = sum(abs_score)
-        # individual heights for each section
-        gradient_heights = [i / score_sum * height for i in abs_score]
-        # the height value for the end of each section
-        additive_heights = [gradient_heights[0], 0,0,0]
-        for i in range(1,4):
-            additive_heights[i] = additive_heights[i-1] + gradient_heights[i]
-        #print gradient_heights
-        #print additive_heights
-        mid_hues = [(hues[i] + hues[i+1]) / 2 for i in range(4)]
-        #print mid_hues
-        # positive scores are light while negatives are dark
-        lightness = [0,0,0,0,0]
-        for i in range(len(lightness)):
-            if (personality_score[i] >= 0):
-                lightness[i] = 60
-            else:
-                lightness[i] = 25
-        mid_lightness = [(lightness[i] + lightness[i+1]) / 2 for i in range(4)]
+    return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 
-        # interpolate the hue and lightness
-        if position[0] < additive_heights[0]:
-            hue = position[0] * (mid_hues[0] - hues[0]) / gradient_heights[0] + hues[0]
-            lit = position[0] * (mid_lightness[0] - lightness[0]) / gradient_heights[0] + lightness[0]
-        elif position[0] < additive_heights[1]:
-            hue = (position[0] - additive_heights[0]) * (mid_hues[1] - mid_hues[0]) / gradient_heights[1] + mid_hues[0]
-            lit = (position[0] - additive_heights[0]) * (mid_lightness[1] - mid_lightness[0]) / gradient_heights[1] + mid_lightness[0]
-        elif position[0] < additive_heights[2]:
-            hue = (position[0] - additive_heights[1]) * (mid_hues[2] - mid_hues[1]) / gradient_heights[2] + mid_hues[1]
-            lit = (position[0] - additive_heights[1]) * (mid_lightness[2] - mid_lightness[1]) / gradient_heights[2] + mid_lightness[1]
-        elif position[0] < additive_heights[3]:
-            hue = (position[0] - additive_heights[2]) * (mid_hues[3] - mid_hues[2]) / gradient_heights[3] + mid_hues[2]
-            lit = (position[0] - additive_heights[2]) * (mid_lightness[3] - mid_lightness[2]) / gradient_heights[3] + mid_lightness[2]
+# function used to color words in a gradient based on OCEAN scores
+# method 2: 5 colors, 1 per trait, interpolate between all 5
+def ocean_gradient_color_func2(word=None, font_size=None, position=None,
+                      orientation=None, font_path=None, random_state=None,
+                      width=None, height=None, ocean = None, personality_score=None,
+                      pos_score=None, neg_score=None):
+    # orange, yellow, green, cyan, blue
+    hues = [15, 53, 120, 185, 225]
+    abs_score = [abs(i) for i in personality_score]
+
+    score_sum = sum(abs_score)
+    # individual heights for each section
+    gradient_heights = [i / score_sum * height for i in abs_score]
+    # the height value for the end of each section
+    additive_heights = [gradient_heights[0], 0,0,0]
+    for i in range(1,4):
+        additive_heights[i] = additive_heights[i-1] + gradient_heights[i]
+    #print gradient_heights
+    #print additive_heights
+    mid_hues = [(hues[i] + hues[i+1]) / 2 for i in range(4)]
+    #print mid_hues
+    # positive scores are light while negatives are dark
+    lightness = [0,0,0,0,0]
+    for i in range(len(lightness)):
+        if (personality_score[i] >= 0):
+            lightness[i] = 60
         else:
-            hue = (position[0] - additive_heights[3]) * (hues[4] - mid_hues[3]) / gradient_heights[4] + mid_hues[3]
-            lit = (position[0] - additive_heights[3]) * (lightness[4] - mid_lightness[3]) / gradient_heights[4] + mid_lightness[3]
+            lightness[i] = 25
+    mid_lightness = [(lightness[i] + lightness[i+1]) / 2 for i in range(4)]
 
-        sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
-        # lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
+    # interpolate the hue and lightness
+    if position[0] < additive_heights[0]:
+        hue = position[0] * (mid_hues[0] - hues[0]) / gradient_heights[0] + hues[0]
+        lit = position[0] * (mid_lightness[0] - lightness[0]) / gradient_heights[0] + lightness[0]
+    elif position[0] < additive_heights[1]:
+        hue = (position[0] - additive_heights[0]) * (mid_hues[1] - mid_hues[0]) / gradient_heights[1] + mid_hues[0]
+        lit = (position[0] - additive_heights[0]) * (mid_lightness[1] - mid_lightness[0]) / gradient_heights[1] + mid_lightness[0]
+    elif position[0] < additive_heights[2]:
+        hue = (position[0] - additive_heights[1]) * (mid_hues[2] - mid_hues[1]) / gradient_heights[2] + mid_hues[1]
+        lit = (position[0] - additive_heights[1]) * (mid_lightness[2] - mid_lightness[1]) / gradient_heights[2] + mid_lightness[1]
+    elif position[0] < additive_heights[3]:
+        hue = (position[0] - additive_heights[2]) * (mid_hues[3] - mid_hues[2]) / gradient_heights[3] + mid_hues[2]
+        lit = (position[0] - additive_heights[2]) * (mid_lightness[3] - mid_lightness[2]) / gradient_heights[3] + mid_lightness[2]
+    else:
+        hue = (position[0] - additive_heights[3]) * (hues[4] - mid_hues[3]) / gradient_heights[4] + mid_hues[3]
+        lit = (position[0] - additive_heights[3]) * (lightness[4] - mid_lightness[3]) / gradient_heights[4] + mid_lightness[3]
+
+    sat = abs(position[0] - (height / 2)) * 20 / (height / 2) + 60 
+    # lit = abs(position[0] - (height / 2)) * 20 / (height / 2) + 40 
 
     return "hsl(%d, %d%%, %d%%)" % (hue, sat,lit)
 

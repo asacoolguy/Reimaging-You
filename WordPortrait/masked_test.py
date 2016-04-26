@@ -45,9 +45,9 @@ def resizeImg(img, maxSize):
 	return resizedImg
 
 # read image to array
-def makeMask(filename, imgSize):
+def makeMask(filename, person, imgSize):
 	# open the image, resize it and turn it to greyscale
-	image = Image.open('thresholdTest/' + filename + '.jpg').convert('L')
+	image = Image.open('photoOp/' + person + '/' + filename + '.jpg').convert('L')
 	greyscale = np.array(image)
 
 	# compute the global and adaptive thresholds
@@ -62,27 +62,25 @@ def makeMask(filename, imgSize):
 	adaptive_threshold = addTransparency(adaptive_threshold)
 
 	# save the files and overlay then
-	normal_threshold.save('thresholdTest/adaptiveThreshold/' + filename + "_normal_threshold.jpg")
-	adaptive_threshold.save('thresholdTest/adaptiveThreshold/' + filename + "_adaptive_threshold.jpg")
+	normal_threshold.save('photoOp/' + person + '/thresholds/' + filename + "_normal_threshold.jpg")
+	adaptive_threshold.save('photoOp/' + person + '/thresholds/' + filename + "_adaptive_threshold.jpg")
 	adaptive_threshold.paste(normal_threshold, (0,0), normal_threshold)
 
 	#adaptive_threshold.show()
-	adaptive_threshold.save('thresholdTest/adaptiveThreshold/' + filename + "_combined_threshold.jpg")
-
-
+	adaptive_threshold.save('photoOp/' + person + '/thresholds/' + filename + "_combined_threshold.jpg")
 
 
 # Read the whole text.
 #text = open(path.join(d, 'obama_speech.txt')).read()
 
 # get the input
-# db = MySQLdb.connect(host="localhost", port=3306, user="root", passwd="localroot", db="test")
-# cursor = db.cursor()
-# cursor.execute("SELECT * FROM ethan_status")
-
-db = MySQLdb.connect(host="127.0.0.1", port=3307, user="ethan", passwd="YnN&Y,[h6X,[NKp&", db="ethan")
+db = MySQLdb.connect(host="localhost", port=3306, user="root", passwd="localroot", db="test")
 cursor = db.cursor()
-cursor.execute("SELECT * FROM feat$1gram$statuses_ethan$user_id$16to16")
+cursor.execute("SELECT * FROM ethan_status")
+
+# db = MySQLdb.connect(host="127.0.0.1", port=3307, user="ethan", passwd="YnN&Y,[h6X,[NKp&", db="ethan")
+# cursor = db.cursor()
+# cursor.execute("SELECT * FROM feat$1gram$statuses_ethan$user_id$16to16")
 
 # filter table into lists of tuples 
 results = cursor.fetchall()
@@ -156,32 +154,30 @@ print personaltyScores
 print posScore
 print negScore
 
-personaltyScores = [1.0, -0.046, -0.35, -0.047, 0.21]
-posScore = [.15, 0.46, 0.53, 0.40, 0.45]
-negScore = [-1.0, -0.49, -0.72, -0.42, -0.33]
+#personaltyScores = [0.4, -0.046, -0.35, -0.77, 1.0]
+#posScore = [.45, 0.46, 0.53, 0.40, 0.65]
+#negScore = [-.05, -0.49, -0.72, -0.62, -0.33]
 
 # read the mask image
 filename = "ethan"
+person = "ethan"
 threshold = 3/4
-imgSize = 1000
-makeMask(filename, imgSize)
+imgSize = 1500
+makeMask(filename, person, imgSize)
 
-image = Image.open("thresholdTest/adaptiveThreshold/" + filename + "_combined_threshold.jpg")
+image = Image.open("photoOp/" + person + "/thresholds/" + filename + "_combined_threshold.jpg")
 resizedImage = resizeImg(image, imgSize)
 mask = np.array(resizedImage)
 
 wc = WordCloud(background_color="white", max_words=6000, mask=mask, prefer_horizontal=1,
 	min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
-	color_func = gradient_color_func, bold_font_threshold=threshold, personality_score=personaltyScores,
+	color_func = ocean_gradient_color_func, bold_font_threshold=threshold, personality_score=personaltyScores,
 	pos_score = posScore, neg_score = negScore)
 # generate word cloud
 wc.generate_from_frequencies(words)
 
 # store to file
-wc.to_file("tests/OCEAN_color_gradient/" + filename + "_ope.jpg")
-
-#wc.recolor(color_func = gradient_color_func2)
-#wc.to_file(path.join(d, "test2.png"))
+wc.to_file("photoOp/" + person + "/" + filename + "_cloud.jpg")
 
 image = wc.to_image()
 image.show()
