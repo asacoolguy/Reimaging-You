@@ -159,9 +159,8 @@ print negScore
 #negScore = [-.05, -0.49, -0.72, -0.62, -0.33]
 
 # read the mask image
-filename = "ethan"
+filename = "ethan9"
 person = "ethan"
-threshold = 3/4
 imgSize = 1500
 makeMask(filename, person, imgSize)
 
@@ -169,9 +168,9 @@ image = Image.open("photoOp/" + person + "/thresholds/" + filename + "_combined_
 resizedImage = resizeImg(image, imgSize)
 mask = np.array(resizedImage)
 
-wc = WordCloud(background_color="white", max_words=6000, mask=mask, prefer_horizontal=1,
+wc = WordCloud(background_color="white", max_words = 6000, mask = mask, prefer_horizontal=1,
 	min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
-	color_func = ocean_gradient_color_func, bold_font_threshold=threshold, personality_score=personaltyScores,
+	color_func = gradient_color_func, personality_score=personaltyScores,
 	pos_score = posScore, neg_score = negScore)
 # generate word cloud
 wc.generate_from_frequencies(words)

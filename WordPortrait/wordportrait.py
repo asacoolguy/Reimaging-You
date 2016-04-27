@@ -24,13 +24,25 @@ from query_integral_image import query_integral_image
 item1 = itemgetter(1)
 
 # paths for the fonts used. remember to put the bold/cursive ones first
-FONT_PATHS = [os.path.join(os.path.dirname(__file__), "fonts/Debby.ttf"),
-            os.path.join(os.path.dirname(__file__), "fonts/VarianeScript.ttf"),
+FONT_PATHS = [os.path.join(os.path.dirname(__file__), "newfonts/Cooper.ttf"),
+              os.path.join(os.path.dirname(__file__), "newfonts/Garamond.ttf"),
+              os.path.join(os.path.dirname(__file__), "newfonts/Optima.ttf"),
+              #os.path.join(os.path.dirname(__file__), "fonts/Debby.ttf"),
+              os.path.join(os.path.dirname(__file__), "newfonts/Souvenir.ttf"),
+              os.path.join(os.path.dirname(__file__), "fonts/VarianeScript.ttf"),
             #os.path.join(os.path.dirname(__file__), "fonts/MasterOfBreak.ttf"),
-            os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
-            os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
-            ]
-BOLD_FONTS_INDEX = 2
+              ]
+#             os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
+#             os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
+#             ]
+# FONT_PATHS = [os.path.join(os.path.dirname(__file__), "newfonts/Cooper.ttf"),
+#             os.path.join(os.path.dirname(__file__), "newfonts/Garamond.ttf"),
+#             os.path.join(os.path.dirname(__file__), "newfonts/Optima.ttf"),
+#             os.path.join(os.path.dirname(__file__), "newfonts/Souvenir.ttf"),
+#             os.path.join(os.path.dirname(__file__), "newfonts/palabi.ttf"),
+#             ]
+
+# BOLD_FONTS_INDEX = 2
 
 STOPWORDS = set([x.strip() for x in open(os.path.join(os.path.dirname(__file__),
                                                       'stopwords')).read().split('\n')])
@@ -353,6 +365,7 @@ class WordCloud(object):
         Font paths of the fonts that will be used (OTF or TTF).
 
     bold_fonts_index (default = BOLD_FONTS_INDEX)
+        not currently used
 
     width : int (default=400)
         Width of the canvas.
@@ -421,6 +434,7 @@ class WordCloud(object):
         threshold for which fonts to use for each word depending on word size.
         word with size larger than bold_font_threshold * max_font_size will use bold fonts
         words smaller will use normal fonts
+        *** not currently used
 
     personality_score: list of 5 ints (default = [1,1,1,1,1])
         scores of the 5 ocean traits. used for ocean gradient color func.
@@ -462,10 +476,11 @@ class WordCloud(object):
             font_paths = FONT_PATHS
         else:
             font_paths = [font_path]
-        if bold_fonts_index is None:
-            self.bold_fonts_index = BOLD_FONTS_INDEX
-        else:
-            self.bold_fonts_index = bold_fonts_index
+        
+        # if bold_fonts_index is None:
+        #     self.bold_fonts_index = BOLD_FONTS_INDEX
+        # else:
+        #     self.bold_fonts_index = bold_fonts_index
 
         self.font_paths = font_paths
         self.width = width
@@ -493,10 +508,12 @@ class WordCloud(object):
         self.relative_scaling = relative_scaling
         self.upper_font_filter = upper_font_filter
         self.lower_font_filter = lower_font_filter
-        if bold_font_threshold is None:
-            self.bold_font_threshold = 1/2
-        else:
-            self.bold_font_threshold = bold_font_threshold
+        
+        # if bold_font_threshold is None:
+        #     self.bold_font_threshold = 1/2
+        # else:
+        #     self.bold_font_threshold = bold_font_threshold
+        
         if personality_score is None:
             self.personality_score = [1,1,1,1,1]
             self.pos_score = [1,1,1,1,1]
