@@ -69,18 +69,54 @@ def makeMask(filename, person, imgSize):
 	#adaptive_threshold.show()
 	adaptive_threshold.save('photoOp/' + person + '/thresholds/' + filename + "_combined_threshold.jpg")
 
+# image that makes images in bulk
+def makePortraitBulk(photoName, topNum, botNum, person, imgSize, personaltyScores, posScore, negScore, words):
+	for i in range(botNum, topNum + 1):
+		filename = photoName + str(i)
+		makePortrait(filename, person, imgSize, personaltyScores, posScore, negScore, words)
+
+	print "everything is done!"
+	
+
+def makePortrait(filename, person, imgSize, personaltyScores, posScore, negScore, words):
+	# read the mask image
+	makeMask(filename, person, imgSize)
+
+	image = Image.open("photoOp/" + person + "/thresholds/" + filename + "_combined_threshold.jpg")
+	resizedImage = resizeImg(image, imgSize)
+	mask = np.array(resizedImage)
+
+	wc = WordCloud(background_color="white", max_words = 6000, mask = mask, prefer_horizontal=1,
+		min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
+		color_func = gradient_color_func, personality_score=personaltyScores,
+		pos_score = posScore, neg_score = negScore)
+	# generate word cloud
+	wc.generate_from_frequencies(words)
+
+	# store to file
+	wc.to_file("photoOp/" + person + "/" + filename + "_cloud.jpg")
+
+	image = wc.to_image()
+	print filename + " is done!"
 
 # Read the whole text.
 #text = open(path.join(d, 'obama_speech.txt')).read()
 
 # get the input
-db = MySQLdb.connect(host="localhost", port=3306, user="root", passwd="localroot", db="test")
-cursor = db.cursor()
-cursor.execute("SELECT * FROM ethan_status")
-
-# db = MySQLdb.connect(host="127.0.0.1", port=3307, user="ethan", passwd="YnN&Y,[h6X,[NKp&", db="ethan")
+# db = MySQLdb.connect(host="localhost", port=3306, user="root", passwd="localroot", db="test")
 # cursor = db.cursor()
-# cursor.execute("SELECT * FROM feat$1gram$statuses_ethan$user_id$16to16")
+# cursor.execute("SELECT * FROM ethan_status")
+
+photoName = "grace"
+person = "grace_ware"
+topNum = 10
+botNum = 10
+imgSize = 1500
+
+
+db = MySQLdb.connect(host="127.0.0.1", port=3307, user="ethan", passwd="YnN&Y,[h6X,[NKp&", db="ethan")
+cursor = db.cursor()
+cursor.execute("SELECT * FROM 1gram_" + person)
 
 # filter table into lists of tuples 
 results = cursor.fetchall()
@@ -99,6 +135,13 @@ for row in results:
 	neu = row[7]
 	agr = row[8]
 	con = row[9]
+
+	if (word == ":d"):
+		word = ":D"
+	if (word == "d:"):
+		word = "D:"
+	if (word =="xd"):
+		word = "XD"
 
 	# calculate personality scores
 	# scores still count even if the word is filtered out
@@ -154,32 +197,15 @@ print personaltyScores
 print posScore
 print negScore
 
-#personaltyScores = [0.4, -0.046, -0.35, -0.77, 1.0]
-#posScore = [.45, 0.46, 0.53, 0.40, 0.65]
-#negScore = [-.05, -0.49, -0.72, -0.62, -0.33]
+# personaltyScores = [0.44, -0.046, -0.75, -0.47, 1.0]
+# posScore = [.45, 0.46, 0.63, 0.60, 0.35]
+# negScore = [-.35, -0.89, -0.32, -0.32, -0.83]
 
-# read the mask image
-filename = "ethan9"
-person = "ethan"
-imgSize = 1500
-makeMask(filename, person, imgSize)
 
-image = Image.open("photoOp/" + person + "/thresholds/" + filename + "_combined_threshold.jpg")
-resizedImage = resizeImg(image, imgSize)
-mask = np.array(resizedImage)
 
-wc = WordCloud(background_color="white", max_words = 6000, mask = mask, prefer_horizontal=1,
-	min_font_size = 1, upper_font_filter=float(1/5), lower_font_filter=float(1/10),
-	color_func = gradient_color_func, personality_score=personaltyScores,
-	pos_score = posScore, neg_score = negScore)
-# generate word cloud
-wc.generate_from_frequencies(words)
+makePortraitBulk(photoName, topNum, botNum, person, imgSize, personaltyScores, posScore, negScore, words)
+#makePortrait(photoName, person, imgSize, personaltyScores, posScore, negScore, words)
 
-# store to file
-wc.to_file("photoOp/" + person + "/" + filename + "_cloud.jpg")
-
-image = wc.to_image()
-image.show()
 
 # close database link
 db.close()

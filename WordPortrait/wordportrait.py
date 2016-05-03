@@ -24,23 +24,17 @@ from query_integral_image import query_integral_image
 item1 = itemgetter(1)
 
 # paths for the fonts used. remember to put the bold/cursive ones first
-FONT_PATHS = [os.path.join(os.path.dirname(__file__), "newfonts/Cooper.ttf"),
+FONT_PATHS = [#os.path.join(os.path.dirname(__file__), "newfonts/Cooper.ttf"),
               os.path.join(os.path.dirname(__file__), "newfonts/Garamond.ttf"),
               os.path.join(os.path.dirname(__file__), "newfonts/Optima.ttf"),
-              #os.path.join(os.path.dirname(__file__), "fonts/Debby.ttf"),
-              os.path.join(os.path.dirname(__file__), "newfonts/Souvenir.ttf"),
+              os.path.join(os.path.dirname(__file__), "fonts/Debby.ttf"),
+              #os.path.join(os.path.dirname(__file__), "newfonts/Souvenir.ttf"),
               os.path.join(os.path.dirname(__file__), "fonts/VarianeScript.ttf"),
-            #os.path.join(os.path.dirname(__file__), "fonts/MasterOfBreak.ttf"),
-              ]
-#             os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
-#             os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
-#             ]
-# FONT_PATHS = [os.path.join(os.path.dirname(__file__), "newfonts/Cooper.ttf"),
-#             os.path.join(os.path.dirname(__file__), "newfonts/Garamond.ttf"),
-#             os.path.join(os.path.dirname(__file__), "newfonts/Optima.ttf"),
-#             os.path.join(os.path.dirname(__file__), "newfonts/Souvenir.ttf"),
+              # os.path.join(os.path.dirname(__file__), "fonts/MasterOfBreak.ttf"),
+              os.path.join(os.path.dirname(__file__), "fonts/BodoniXT.ttf"),
+              # os.path.join(os.path.dirname(__file__), "fonts/DroidSansMono.ttf"),
 #             os.path.join(os.path.dirname(__file__), "newfonts/palabi.ttf"),
-#             ]
+              ]
 
 # BOLD_FONTS_INDEX = 2
 
@@ -233,8 +227,8 @@ def ocean_gradient_color_func(word=None, font_size=None, position=None,
     else:
         # not balanced, find dominant score 
         # orange, yellow, green, cyan, blue
-        hues = [15, 53, 120, 185, 225]
-        hues2 = [5, 43, 120, 195, 235]        
+        hues = [30, 53, 135, 185, 205]
+        hues2 = [20, 43, 115, 195, 235]        
 
         # make sure we don't have high neuroticism
         if maxIndex == 4 and abs(pos_score[maxIndex]) > abs(neg_score[maxIndex]):
@@ -717,7 +711,7 @@ class WordCloud(object):
             occupancy.update(img_array, x, y)
             last_freq = freq
 
-        print max_actual_size
+        # print max_actual_size
         self.layout_ = list(zip(frequencies, font_sizes, positions, orientations, font_indecies, oceans, colors))
         return self
 
